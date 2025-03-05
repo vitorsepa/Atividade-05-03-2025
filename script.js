@@ -1,7 +1,52 @@
-// pegar o elemento canvas pelo id
 const canvas = document.getElementById('jogo2d')
 
-// inicializar o canvas
 const ctx = canvas.getContext('2d')
+const gravidade = 0.5
 
-// criar função loop que executa 60 vezes por segundo
+document.addEventListener('keypress', (e) => {
+    if (e.code == 'Space' && personagem.pulando == false){
+        console.log("clico para pualrarr")
+        personagem.velocidadey = 15
+        personagem.pulando = true
+    }
+    
+})
+
+const personagem = {
+    x: 100,
+    y: canvas.height - 170,
+    altura: 50,
+    largura: 50,
+    velocidadey: 0,
+    pulando: false
+}
+
+function desenharPersonagem(){
+    ctx.fillStyle = 'yellow'
+    ctx.fillRect(personagem.x, personagem.y, personagem.altura, personagem.largura)
+}
+
+function atualizarPersonagem(){
+    if (personagem.pulando == true){
+        personagem.velocidadey -= gravidade
+        personagem.y -= personagem.velocidadey
+        if (personagem.y >= canvas.height - 170){
+            personagem.velocidadey = 0
+            personagem.pulando = false
+            personagem.y = canvas.height -170
+        }
+    }
+}
+
+function loop() {
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+    desenharPersonagem()
+
+    atualizarPersonagem()
+
+    requestAnimationFrame(loop)
+}
+
+loop()
