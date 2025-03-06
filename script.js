@@ -14,26 +14,31 @@ document.addEventListener('keypress', (e) => {
 
 const personagem = {
     x: 100,
-    y: canvas.height - 170,
+    y: canvas.height - 143,
     altura: 50,
     largura: 50,
     velocidadey: 0,
-    pulando: false
+    pulando: false,
+    imagem: new Image()
+
 }
+
+personagem.imagem.src = 'download.png'
+
 
 function desenharPersonagem(){
     ctx.fillStyle = 'yellow'
-    ctx.fillRect(personagem.x, personagem.y, personagem.altura, personagem.largura)
+    ctx.drawImage(personagem.imagem, personagem.x, personagem.y, personagem.altura, personagem.largura)
 }
 
 function atualizarPersonagem(){
     if (personagem.pulando == true){
         personagem.velocidadey -= gravidade
         personagem.y -= personagem.velocidadey
-        if (personagem.y >= canvas.height - 170){
+        if (personagem.y >= canvas.height - 143){
             personagem.velocidadey = 0
             personagem.pulando = false
-            personagem.y = canvas.height -170
+            personagem.y = canvas.height -143
         }
     }
 }
