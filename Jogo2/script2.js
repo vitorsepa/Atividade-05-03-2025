@@ -1,4 +1,3 @@
-// pegando o canvas do html
 const canvas = document.getElementById('jogo2d');
 const ctx = canvas.getContext('2d');
 
@@ -8,17 +7,15 @@ document.addEventListener('keypress', (e) => {
     }
 });
 
-document.addEventListener('click' || 'Space', () => {
+document.addEventListener('click', () => {
     if (jogo.gameOver) {
-        location.reload();  // Recarrega o jogo
+        location.reload();
     }
 });
 
-// Definindo algumas constantes globais
 const gravidade = 0.8;
-let gameOver = false;
 
-// Classe Entidade (base para personagens e obstáculos)
+// ---------------------- entidade -------------------------- //
 class Entidade {
     constructor(x, y, largura, altura, imagemSrc) {
         this.x = x;
@@ -29,13 +26,12 @@ class Entidade {
         this.imagem.src = imagemSrc;
     }
 
-    // Método para desenhar a imagem no canvas
     desenhar(ctx) {
         ctx.drawImage(this.imagem, this.x, this.y, this.largura, this.altura);
     }
 }
 
-// Classe Personagem
+//-------------------- personagem -------------------------- //
 class Personagem extends Entidade {
     constructor(x, y, largura, altura, imagemSrc) {
         super(x, y, largura, altura, imagemSrc);
@@ -43,13 +39,11 @@ class Personagem extends Entidade {
         this.pulando = false;
     }
 
-    // Atualizar a posição do personagem
     atualizar() {
         if (this.pulando) {
             this.velocidadey -= gravidade;
             this.y -= this.velocidadey;
 
-            // Conceito de chão (evitar que o personagem fique abaixo do chão)
             if (this.y >= canvas.height - this.altura - 93) {
                 this.velocidadey = 0;
                 this.pulando = false;
@@ -58,7 +52,6 @@ class Personagem extends Entidade {
         }
     }
 
-    // Método para fazer o personagem pular
     pular() {
         if (!this.pulando) {
             this.velocidadey = 15;
@@ -67,25 +60,25 @@ class Personagem extends Entidade {
     }
 }
 
-// Classe Obstaculo
+// --------------------- obstaculo ------------------------- //
 class Obstaculo extends Entidade {
     constructor(x, y, largura, altura, imagemSrc) {
         super(x, y, largura, altura, imagemSrc);
-        this.velocidadex = 7;  // Velocidade inicial
+        this.velocidadex = 7;
+        this.passado = false; // Marca se o obstáculo foi "passado"
     }
 
-    // Atualizar a posição do obstáculo
     atualizar() {
         this.x -= this.velocidadex;
 
-        // Se o obstáculo saiu da tela, reinicia sua posição
         if (this.x <= 0 - this.largura) {
-            this.x = canvas.width + Math.random() * 200; // Posição nova
+            this.x = canvas.width + Math.random() * 200;
+            this.passado = false; // Reseta o estado de "passado" quando o obstáculo é reposicionado
         }
     }
 }
 
-// Classe Jogo
+// ------------------------- jogo --------------------------- //
 class Jogo {
     constructor() {
         this.personagem = new Personagem(100, canvas.height - 143, 50, 50, 'download.png');
@@ -93,12 +86,13 @@ class Jogo {
         this.gameOverImage = new Image();
         this.gameOverImage.src = 'gameover.png';
         this.tempo = 0;
+        this.pontuacao = 0;
+        this.gameOver = false;
     }
 
-    // Função para criar obstáculos
     criarObstaculo() {
         const obstaculo = new Obstaculo(
-            canvas.width + Math.random() * 200, // Posição inicial aleatória
+            canvas.width + Math.random() * 200,
             canvas.height - 138,
             50,
             50,
@@ -107,47 +101,46 @@ class Jogo {
         this.obstaculos.push(obstaculo);
     }
 
-    // Função para desenhar obstáculos
+    desenharPontuacao() {
+        ctx.font = '30px Impact';
+        ctx.fillStyle = 'white';
+        ctx.fillText(`Pontuação: ${this.pontuacao}`, 10, 30);
+    }
+
     desenharObstaculos() {
         for (let obstaculo of this.obstaculos) {
             obstaculo.desenhar(ctx);
         }
     }
 
-    // Função para atualizar obstáculos
     atualizarObstaculos() {
         for (let obstaculo of this.obstaculos) {
             obstaculo.atualizar();
         }
     }
 
-    // Função para desenhar o personagem
     desenharPersonagem() {
         this.personagem.desenhar(ctx);
     }
 
-    // Função para atualizar o personagem
     atualizarPersonagem() {
         this.personagem.atualizar();
     }
 
-    // Função para verificar colisão
     verificarColisao() {
         for (let obstaculo of this.obstaculos) {
-            // Verificação simples de colisão por caixas delimitadoras
             if (this.personagem.x < obstaculo.x + obstaculo.largura &&
                 this.personagem.x + this.personagem.largura > obstaculo.x &&
                 this.personagem.y < obstaculo.y + obstaculo.altura &&
                 this.personagem.y + this.personagem.altura > obstaculo.y) {
-                this.gameOver = true;  // Ativa o game over
+                this.gameOver = true;
                 break;
             }
         }
     }
 
-    // Função para desenhar o Game Over
     desenharGameOver() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height); // Limpa o canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         const gameOverWidth = this.gameOverImage.width;
         const gameOverHeight = this.gameOverImage.height;
         const centerX = (canvas.width - gameOverWidth) / 2;
@@ -155,7 +148,16 @@ class Jogo {
         ctx.drawImage(this.gameOverImage, centerX, centerY, gameOverWidth, gameOverHeight);
     }
 
-    // Loop principal do jogo
+    atualizarPontuacao() {
+        for (let obstaculo of this.obstaculos) {
+            if (this.personagem.x + this.personagem.largura > obstaculo.x && !obstaculo.passado && obstaculo.x + obstaculo.largura < this.personagem.x) {
+                obstaculo.passado = true;
+                this.pontuacao++;  // Incrementa a pontuação quando o personagem passa o obstáculo
+            }
+        }
+    }
+
+    // -------------------- loop (dentro do jogo) --------------------- //
     loop() {
         if (this.gameOver) {
             this.desenharGameOver();
@@ -169,18 +171,18 @@ class Jogo {
         this.desenharObstaculos();
         this.atualizarObstaculos();
         this.verificarColisao();
+        this.atualizarPontuacao(); 
 
-        // Cria obstáculos a cada loop
         if (this.obstaculos.length < 3 && Math.random() < 0.02) {
             this.criarObstaculo();
         }
+
+        this.desenharPontuacao();
 
         requestAnimationFrame(() => this.loop());
     }
 }
 
-// Instanciando o jogo
+// Inicialização do jogo
 const jogo = new Jogo();
-
-// Inicia o loop do jogo
 jogo.loop();
